@@ -3,136 +3,124 @@ from fpdf import FPDF
 from datetime import datetime
 import random
 
-# Configuração da página
+# Configuração da página com a identidade visual do IFPI
 st.set_page_config(page_title="Teste Diagnóstico - Física IFPI", page_icon="🔬")
 
 # Cabeçalho Institucional
 st.markdown("""
     <div style='background-color: #2f9e41; color: white; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 25px;'>
         <h1 style='margin:0;'>INSTITUTO FEDERAL DO PIAUÍ</h1>
-        <p style='margin:0;'>Campus Parnaíba | Prof. Lucas Izidio</p>
+        <p style='margin:0;'>Campus Parnaíba | Licenciatura em Física</p>
+        <p style='margin:0;'><b>Professor: Lucas Izidio</b></p>
     </div>
 """, unsafe_allow_html=True)
 
-# Banco de dados
-BANCO = [
+# Banco de dados fiel ao arquivo anexado
+BANCO_QUESTOES = [
     {
-        "q": "Qual é a ordem de grandeza e o valor aproximado da velocidade média de crescimento da planta Hesperoyucca whipplei em µm/s, sabendo que cresceu 3,7 m em 14 dias?",
+        "q": "A planta de crescimento mais rápido de que se tem notícia, a Hesperoyucca whipplei, cresceu 3,7 m em 14 dias. Qual é a ordem de grandeza e o valor aproximado da velocidade média de crescimento dessa planta em micrômetros por segundo (µm/s)?",
         "o": ["3,06 × 10⁰ µm/s", "3,06 × 10² µm/s", "3,06 × 10⁻² µm/s", "3,06 × 10⁶ µm/s"],
-        "c": "3,06 × 10⁰ µm/s",
-        "r": "14 dias = 1.209.600 s. V = 3,7 / 1.209.600 ≈ 3,058e-6 m/s. Em µm (10⁻⁶), fica 3,06."
+        "c": "3,06 × 10⁰ µm/s"
     },
     {
-        "q": "Quantos algarismos significativos há nas medidas 0,0056 g e 1,2300 g/cm³, respectivamente?",
+        "q": "Durante um experimento no laboratório para determinar a massa específica de diferentes substâncias, um aluno anota as seguintes medições: 0,0056 g e 1,2300 g/cm³. Quantos algarismos significativos há em cada uma dessas medidas, respectivamente?",
         "o": ["4 e 5", "2 e 5", "2 e 4", "4 e 4"],
-        "c": "2 e 5",
-        "r": "0,0056 (2 AS - zeros à esquerda não contam). 1,2300 (5 AS - zeros à direita contam)."
+        "c": "2 e 5"
     },
     {
-        "q": "Qual o resultado da área de uma lâmina de 4,32 cm por 2,1 cm, seguindo a regra de algarismos significativos?",
+        "q": "Um biólogo está calculando a área de uma lâmina de vidro para microscópio e multiplica as medidas de seus lados: 4,32 cm por 2,1 cm. Aplicando rigorosamente a regra do menor número de algarismos significativos para multiplicação, qual deve ser o resultado final registrado no relatório?",
         "o": ["9,072 cm²", "9,07 cm²", "9,1 cm²", "9,0 cm²"],
-        "c": "9,1 cm²",
-        "r": "2,1 tem 2 AS. O resultado deve ter 2 AS. 9,072 arredonda para 9,1."
+        "c": "9,1 cm²"
     },
     {
-        "q": "Qual é a ordem de grandeza de 1000 km expressa em metros?",
+        "q": "Imagine que estamos modelando um problema biológico ou geológico através de um novelo gigante que possui cerca de 2 m de raio. Se desenrolarmos todo o fio e obtivermos um comprimento total de 1000 km, qual é a ordem de grandeza desse comprimento se expresso no Sistema Internacional de Unidades (metros)?",
         "o": ["10³", "10⁵", "10⁶", "10⁹"],
-        "c": "10⁶",
-        "r": "1000 km = 10³ * 10³ m = 10⁶ m."
+        "c": "10⁶"
     },
     {
-        "q": "Ao medir um osso com régua de 1 mm e anotar 9,65 cm, o que se afirma sobre os algarismos?",
-        "o": ["Todos exatos", "9 e 6 são corretos, 5 é estimado", "Apenas 9 é correto", "Possui 4 AS"],
-        "c": "9 e 6 são corretos, 5 é estimado",
-        "r": "O último dígito em instrumentos analógicos é sempre a estimativa (duvidoso)."
+        "q": "Ao medir o comprimento de um osso em laboratório com uma régua de excelente qualidade (cuja menor divisão é de 1 mm), um estudante anota o valor de 9,65 cm. Fisicamente, o que podemos afirmar sobre os algarismos dessa medida?",
+        "o": ["Todos os algarismos são exatos, pois a régua é precisa.", "Os algarismos 9 e 6 são lidos na régua (corretos), enquanto o 5 é um algarismo estimado (duvidoso).", "O algarismo 9 é o único correto, os demais são duvidosos.", "A medida possui 4 algarismos significativos."],
+        "c": "Os algarismos 9 e 6 são lidos na régua (corretos), enquanto o 5 é um algarismo estimado (duvidoso)."
     },
     {
-        "q": "Velocidade média de um carro que faz 8,4 km a 70 km/h e o motorista caminha 2,0 km por 30 min:",
+        "q": "Você está dirigindo rumo a uma base de pesquisa ambiental em uma estrada retilínea. O carro percorre 8,4 km a 70 km/h, mas repentinamente para por falta de gasolina. Nos 30 minutos seguintes, você caminha mais 2,0 km ao longo da estrada até chegar a um posto. Qual foi a sua velocidade escalar média desde o início da viagem até a chegada ao posto?",
         "o": ["16,8 km/h", "35,0 km/h", "70,0 km/h", "12,4 km/h"],
-        "c": "16,8 km/h",
-        "r": "Tempo total = 0,12h + 0,5h = 0,62h. Distância = 10,4km. Vm = 10,4/0,62 = 16,8."
+        "c": "16,8 km/h"
     },
     {
-        "q": "Velocidade média em viagem de retorno: metade a 55 km/h e metade a 90 km/h:",
+        "q": "Após abastecer, o pesquisador faz o caminho de volta. Ele viaja metade da distância total a 55 km/h e a outra metade da distância a 90 km/h. Qual é a velocidade escalar média durante essa viagem inteira de retorno? (Dica: Pense na relação entre a distância e o tempo total).",
         "o": ["72,5 km/h", "68,3 km/h", "35,0 km/h", "0 km/h"],
-        "c": "68,3 km/h",
-        "r": "Média harmônica: (2*55*90)/(55+90) = 68,27."
+        "c": "68,3 km/h"
     },
     {
-        "q": "Resultado de (0,58 dm³ - 0,050 dm³) × 0,112 mol/dm³ com regras de AS:",
+        "q": "Ao fazer diferentes operações com valores de medidas na mesma expressão, como calcular a quantidade de matéria, um aluno obtém a seguinte expressão: (0,58 dm³ - 0,050 dm³) × 0,112 mol/dm³. Realizando primeiro a subtração e considerando o fator que tem o menor número de algarismos significativos (que é 2), a resposta final correta é:",
         "o": ["0,05936 mol", "0,0594 mol", "0,059 mol", "0,06 mol"],
-        "c": "0,059 mol",
-        "r": "Subtração dá 0,53 (2 AS). Multiplicação final deve ter 2 AS: 0,059."
+        "c": "0,059 mol"
     },
     {
-        "q": "Distância percorrida por um caça a 3400 km/h em 100 ms:",
+        "q": "Um piscar de olhos humano dura, em média, cerca de 100 ms. Um caça a jato de alta performance se move a uma velocidade de 3400 km/h. Qual é, aproximadamente, a distância percorrida por esse caça apenas durante o piscar de olhos do piloto?",
         "o": ["94,4 m", "340 m", "34 m", "9,4 m"],
-        "c": "94,4 m",
-        "r": "3400 km/h = 944,4 m/s. Em 0,1s = 94,44m."
+        "c": "94,4 m"
     },
     {
-        "q": "483 km em notação científica no SI (metros):",
+        "q": "Um piloto de avião agrícola voa 483 km para o leste em 45,0 minutos para espalhar sementes. Expressando a distância de 483 km em notação científica no Sistema Internacional (metros), obtemos:",
         "o": ["483 × 10³ m", "4,83 × 10⁵ m", "4,83 × 10⁴ m", "4,83 × 10⁻⁵ m"],
-        "c": "4,83 × 10⁵ m",
-        "r": "483 km = 483.000 m = 4,83 * 10⁵ m."
+        "c": "4,83 × 10⁵ m"
     }
 ]
 
-if 'shuffled_data' not in st.session_state:
-    temp_list = []
-    for item in BANCO:
+if 'shuffled_questions' not in st.session_state:
+    data_copy = []
+    for item in BANCO_QUESTOES:
         opts = list(item["o"])
         random.shuffle(opts)
-        temp_list.append({"q": item["q"], "o": opts, "c": item["c"], "r": item["r"]})
-    random.shuffle(temp_list)
-    st.session_state.shuffled_data = temp_list
+        data_copy.append({"q": item["q"], "o": opts, "c": item["c"]})
+    random.shuffle(data_copy)
+    st.session_state.shuffled_questions = data_copy
 
-def get_pdf_bytes(pdf):
+def gerar_pdf_professor(nome, nota, porcentagem):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("helvetica", 'B', 16)
+    pdf.set_text_color(47, 158, 65)
+    pdf.cell(190, 10, txt="IFPI - COMPROVANTE DE ATIVIDADE", ln=True, align='C')
+    pdf.ln(10)
+    pdf.set_font("helvetica", '', 12)
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(190, 8, txt=f"Estudante: {nome}", ln=True)
+    pdf.cell(190, 8, txt=f"Disciplina: Introdução às Ciências da Natureza", ln=True)
+    pdf.cell(190, 8, txt=f"Data: {datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=True)
+    pdf.ln(10)
+    pdf.set_font("helvetica", 'B', 16)
+    pdf.cell(190, 15, txt=f"NOTA FINAL: {nota} / 10.0", ln=True, align='C', border=1)
+    pdf.set_font("helvetica", '', 12)
+    pdf.cell(190, 10, txt=f"Aproveitamento: {porcentagem}%", ln=True, align='C')
     return bytes(pdf.output())
 
-with st.form("form_fisica"):
-    nome = st.text_input("Nome Completo (SUAP):")
-    respostas_user = []
-    for i, quest in enumerate(st.session_state.shuffled_data):
+with st.form("quiz_ifpi"):
+    nome_aluno = st.text_input("Nome Completo (para registro no SUAP):")
+    respostas_usuario = []
+    for i, item in enumerate(st.session_state.shuffled_questions):
         st.write(f"**Questão {i+1}**")
-        respostas_user.append(st.radio(quest["q"], quest["o"], index=None, key=f"q_{i}"))
+        respostas_usuario.append(st.radio(item["q"], item["o"], index=None, key=f"quest_{i}"))
+        st.write("")
     
-    btn = st.form_submit_button("FINALIZAR")
+    enviar = st.form_submit_button("FINALIZAR TESTE")
 
-if btn:
-    if not nome or None in respostas_user:
-        st.warning("Preencha o nome e todas as questões.")
+if enviar:
+    if not nome_aluno or None in respostas_usuario:
+        st.warning("⚠️ Preencha seu nome e responda todas as questões.")
     else:
-        acertos = sum(1 for i, r in enumerate(respostas_user) if r == st.session_state.shuffled_data[i]["c"])
-        st.success(f"Nota: {float(acertos)}")
+        acertos = sum(1 for i, r in enumerate(respostas_usuario) if r == st.session_state.shuffled_questions[i]["c"])
+        nota_final = float(acertos)
+        porcentagem = int((acertos/10)*100)
         
-        # PDF SUAP
-        p_suap = FPDF()
-        p_suap.add_page()
-        p_suap.set_font("helvetica", 'B', 16)
-        p_suap.cell(190, 10, "COMPROVANTE IFPI", ln=True, align='C')
-        p_suap.set_font("helvetica", '', 12)
-        p_suap.ln(10)
-        p_suap.cell(190, 8, f"Aluno: {nome}", ln=True)
-        p_suap.cell(190, 8, f"Nota: {float(acertos)} / 10.0", ln=True)
-        p_suap.cell(190, 8, f"Data: {datetime.now().strftime('%d/%m/%Y')}", ln=True)
+        st.success(f"Teste finalizado! Sua nota foi {nota_final}")
         
-        # PDF FEEDBACK
-        p_feed = FPDF()
-        p_feed.add_page()
-        p_feed.set_font("helvetica", 'B', 14)
-        p_feed.cell(190, 10, f"Gabarito - {nome}", ln=True, align='C')
-        p_feed.ln(5)
-        for j, qst in enumerate(st.session_state.shuffled_data):
-            p_feed.set_font("helvetica", 'B', 10)
-            p_feed.multi_cell(0, 6, f"Q{j+1}: {qst['q']}")
-            p_feed.set_font("helvetica", '', 10)
-            p_feed.cell(0, 6, f"Sua Resposta: {respostas_user[j]}", ln=True)
-            p_feed.cell(0, 6, f"Correta: {qst['c']}", ln=True)
-            p_feed.set_font("helvetica", 'I', 9)
-            p_feed.multi_cell(0, 5, f"Explicação: {qst['r']}")
-            p_feed.ln(3)
-
-        c1, c2 = st.columns(2)
-        c1.download_button("📄 PDF PARA O PROFESSOR", get_pdf_bytes(p_suap), f"SUAP_{nome}.pdf")
-        c2.download_button("📘 SEU GABARITO", get_pdf_bytes(p_feed), f"Feedback_{nome}.pdf")
+        pdf_bytes = gerar_pdf_professor(nome_aluno, nota_final, porcentagem)
+        st.download_button(
+            label="📄 BAIXAR COMPROVANTE (Enviar ao Professor)",
+            data=pdf_bytes,
+            file_name=f"SUAP_{nome_aluno.replace(' ', '_')}.pdf",
+            mime="application/pdf"
+        )
