@@ -2,10 +2,10 @@ import streamlit as st
 from fpdf import FPDF
 from datetime import datetime
 
-# Configuração da página com as cores do IFPI
+# Configuração da página com a identidade visual do IFPI
 st.set_page_config(page_title="Teste Diagnóstico - Física IFPI", page_icon="🔬")
 
-# Cabeçalho Institucional
+# Cabeçalho Institucional formatado para o Tablet
 st.markdown("""
     <div style='background-color: #2f9e41; color: white; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 25px;'>
         <h1 style='margin:0;'>INSTITUTO FEDERAL DO PIAUÍ</h1>
@@ -14,7 +14,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# Banco de Questões
+# Banco de Questões extraído do Teste Diagnóstico
 questoes = [
     {"q": "1. Velocidade média de crescimento da planta em µm/s?", "o": ["a) 3,06 × 10⁰", "b) 3,06 × 10²", "c) 3,06 × 10⁻²", "d) 3,06 × 10⁶"], "c": "a) 3,06 × 10⁰"},
     {"q": "2. Algarismos significativos em 0,0056 g e 1,2300 g/cm³:", "o": ["a) 4 e 5", "b) 2 e 5", "c) 2 e 4", "d) 4 e 4"], "c": "b) 2 e 5"},
@@ -32,40 +32,44 @@ def criar_pdf(nome, acertos, nota, porcentagem):
     pdf = FPDF()
     pdf.add_page()
     
-    # Cabeçalho do PDF
-    pdf.set_font("Arial", 'B', 16)
-    pdf.set_text_color(47, 158, 65) # Verde IFPI
-    pdf.cell(200, 10, txt="INSTITUTO FEDERAL DO PIAUÍ", ln=True, align='C')
-    pdf.set_font("Arial", 'B', 12)
+    # Configuração de Fonte e Cores do IFPI no PDF
+    pdf.set_font("helvetica", 'B', 16)
+    pdf.set_text_color(47, 158, 65) # Verde Oficial IFPI
+    pdf.cell(190, 10, txt="INSTITUTO FEDERAL DO PIAUÍ", ln=True, align='C')
+    pdf.set_font("helvetica", 'B', 12)
     pdf.set_text_color(0, 0, 0)
-    pdf.cell(200, 10, txt="Campus Parnaíba - Licenciatura em Física", ln=True, align='C')
+    pdf.cell(190, 10, txt="Campus Parnaíba - Licenciatura em Física", ln=True, align='C')
     pdf.ln(10)
     
-    # Dados do Resultado
-    pdf.set_font("Arial", 'B', 14)
-    pdf.cell(200, 10, txt="RELATÓRIO DE DESEMPENHO - TESTE DIAGNÓSTICO", ln=True, align='L')
+    # Título do Relatório
+    pdf.set_font("helvetica", 'B', 14)
+    pdf.cell(190, 10, txt="RELATÓRIO DE DESEMPENHO ACADÊMICO", ln=True, align='L')
     pdf.ln(5)
     
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt=f"Estudante: {nome}", ln=True)
-    pdf.cell(200, 10, txt=f"Data: {datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=True)
-    pdf.cell(200, 10, txt=f"Disciplina: Introdução às Ciências da Natureza", ln=True)
-    
+    # Informações do Estudante para o SUAP
+    pdf.set_font("helvetica", size=12)
+    pdf.cell(190, 8, txt=f"Estudante: {nome}", ln=True)
+    pdf.cell(190, 8, txt=f"Data/Hora: {datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=True)
+    pdf.cell(190, 8, txt="Disciplina: Introdução às Ciências da Natureza", ln=True)
     pdf.ln(10)
+    
+    # Bloco de Notas
     pdf.set_fill_color(240, 240, 240)
-    pdf.set_font("Arial", 'B', 14)
-    pdf.cell(200, 15, txt=f"NOTA FINAL: {nota} / 10.0", ln=True, align='C', fill=True)
-    pdf.cell(200, 10, txt=f"Aproveitamento: {porcentagem}% ({acertos} acertos de 10)", ln=True, align='C')
+    pdf.set_font("helvetica", 'B', 16)
+    pdf.cell(190, 15, txt=f"NOTA FINAL: {nota} / 10.0", ln=True, align='C', fill=True)
+    pdf.set_font("helvetica", '', 12)
+    pdf.cell(190, 10, txt=f"Aproveitamento: {porcentagem}% ({acertos} acertos de 10)", ln=True, align='C')
     
     pdf.ln(20)
-    pdf.set_font("Arial", 'I', 10)
-    pdf.multi_cell(0, 10, txt="Este documento é um comprovante oficial de realização da atividade diagnóstica. O aluno deve encaminhá-lo ao professor para fins de registro no SUAP.")
+    pdf.set_font("helvetica", 'I', 10)
+    pdf.multi_cell(0, 8, txt="Este documento é um comprovante oficial de realização da atividade diagnóstica. O aluno deve salvar este arquivo e encaminhá-lo ao professor para registro de nota no SUAP.")
     
-    return pdf.output(dest='S').encode('latin-1')
+    return pdf.output()
 
-# Interface do Aluno
+# Interface do Estudante no Navegador
 with st.form("quiz_form"):
-    nome_aluno = st.text_input("Digite seu Nome Completo:")
+    nome_aluno = st.text_input("Nome Completo do Aluno:", placeholder="Digite seu nome conforme o SUAP...")
+    st.info("Responda todas as questões abaixo para liberar o botão de finalização.")
     st.write("---")
     
     respostas_aluno = []
@@ -73,31 +77,35 @@ with st.form("quiz_form"):
         respostas_aluno.append(st.radio(item["q"], item["o"], index=None, key=f"q{i}"))
         st.write("")
 
-    finalizar = st.form_submit_button("FINALIZAR TESTE")
+    finalizar = st.form_submit_button("FINALIZAR TESTE E GERAR PDF")
 
 if finalizar:
     if not nome_aluno or None in respostas_aluno:
-        st.error("⚠️ Por favor, preencha seu nome e responda todas as questões!")
+        st.warning("⚠️ Atenção: Preencha seu nome e responda todas as questões antes de finalizar.")
     else:
-        # Cálculo
+        # Cálculo de acertos
         acertos = 0
         for i in range(len(questoes)):
             if respostas_aluno[i] == questoes[i]["c"]:
                 acertos += 1
         
         nota_final = float(acertos)
-        porcentagem_final = (acertos / 10) * 100
+        porcentagem_final = int((acertos / 10) * 100)
         
         st.success(f"Teste finalizado com sucesso, {nome_aluno}!")
-        st.metric("Sua Nota", f"{nota_final} / 10.0")
+        st.balloons()
         
-        # Geração do PDF
+        col1, col2 = st.columns(2)
+        col1.metric("Nota Final", f"{nota_final} / 10.0")
+        col2.metric("Aproveitamento", f"{porcentagem_final}%")
+        
+        # Geração do PDF Corrigida (sem encode)
         pdf_bytes = criar_pdf(nome_aluno, acertos, nota_final, porcentagem_final)
         
         st.download_button(
-            label="📄 BAIXAR COMPROVANTE EM PDF",
+            label="📄 BAIXAR COMPROVANTE (PDF)",
             data=pdf_bytes,
             file_name=f"Resultado_Fisica_{nome_aluno.replace(' ', '_')}.pdf",
             mime="application/pdf"
         )
-        st.info("Após baixar, envie o arquivo PDF para o professor.")
+        st.info("Clique no botão acima para salvar seu comprovante e enviá-lo ao professor.")
