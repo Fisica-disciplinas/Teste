@@ -14,7 +14,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# Banco de Questões extraído do Teste Diagnóstico
+# Banco de Questões
 questoes = [
     {"q": "1. Velocidade média de crescimento da planta em µm/s?", "o": ["a) 3,06 × 10⁰", "b) 3,06 × 10²", "c) 3,06 × 10⁻²", "d) 3,06 × 10⁶"], "c": "a) 3,06 × 10⁰"},
     {"q": "2. Algarismos significativos em 0,0056 g e 1,2300 g/cm³:", "o": ["a) 4 e 5", "b) 2 e 5", "c) 2 e 4", "d) 4 e 4"], "c": "b) 2 e 5"},
@@ -32,28 +32,25 @@ def criar_pdf(nome, acertos, nota, porcentagem):
     pdf = FPDF()
     pdf.add_page()
     
-    # Configuração de Fonte e Cores do IFPI no PDF
+    # Cabeçalho IFPI
     pdf.set_font("helvetica", 'B', 16)
-    pdf.set_text_color(47, 158, 65) # Verde Oficial IFPI
+    pdf.set_text_color(47, 158, 65) 
     pdf.cell(190, 10, txt="INSTITUTO FEDERAL DO PIAUÍ", ln=True, align='C')
     pdf.set_font("helvetica", 'B', 12)
     pdf.set_text_color(0, 0, 0)
     pdf.cell(190, 10, txt="Campus Parnaíba - Licenciatura em Física", ln=True, align='C')
     pdf.ln(10)
     
-    # Título do Relatório
     pdf.set_font("helvetica", 'B', 14)
     pdf.cell(190, 10, txt="RELATÓRIO DE DESEMPENHO ACADÊMICO", ln=True, align='L')
     pdf.ln(5)
     
-    # Informações do Estudante para o SUAP
     pdf.set_font("helvetica", size=12)
     pdf.cell(190, 8, txt=f"Estudante: {nome}", ln=True)
     pdf.cell(190, 8, txt=f"Data/Hora: {datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=True)
     pdf.cell(190, 8, txt="Disciplina: Introdução às Ciências da Natureza", ln=True)
     pdf.ln(10)
     
-    # Bloco de Notas
     pdf.set_fill_color(240, 240, 240)
     pdf.set_font("helvetica", 'B', 16)
     pdf.cell(190, 15, txt=f"NOTA FINAL: {nota} / 10.0", ln=True, align='C', fill=True)
@@ -62,28 +59,26 @@ def criar_pdf(nome, acertos, nota, porcentagem):
     
     pdf.ln(20)
     pdf.set_font("helvetica", 'I', 10)
-    pdf.multi_cell(0, 8, txt="Este documento é um comprovante oficial de realização da atividade diagnóstica. O aluno deve salvar este arquivo e encaminhá-lo ao professor para registro de nota no SUAP.")
+    pdf.multi_cell(0, 8, txt="Este documento é um comprovante oficial de realização da atividade diagnóstica para registro no SUAP.")
     
+    # Retorna o conteúdo como bytes explicitamente
     return pdf.output()
 
-# Interface do Estudante no Navegador
+# Interface
 with st.form("quiz_form"):
-    nome_aluno = st.text_input("Nome Completo do Aluno:", placeholder="Digite seu nome conforme o SUAP...")
-    st.info("Responda todas as questões abaixo para liberar o botão de finalização.")
+    nome_aluno = st.text_input("Nome Completo do Aluno:")
     st.write("---")
     
     respostas_aluno = []
     for i, item in enumerate(questoes):
         respostas_aluno.append(st.radio(item["q"], item["o"], index=None, key=f"q{i}"))
-        st.write("")
 
-    finalizar = st.form_submit_button("FINALIZAR TESTE E GERAR PDF")
+    finalizar = st.form_submit_button("FINALIZAR E GERAR PDF")
 
 if finalizar:
     if not nome_aluno or None in respostas_aluno:
-        st.warning("⚠️ Atenção: Preencha seu nome e responda todas as questões antes de finalizar.")
+        st.warning("⚠️ Preencha seu nome e responda todas as questões.")
     else:
-        # Cálculo de acertos
         acertos = 0
         for i in range(len(questoes)):
             if respostas_aluno[i] == questoes[i]["c"]:
@@ -92,20 +87,14 @@ if finalizar:
         nota_final = float(acertos)
         porcentagem_final = int((acertos / 10) * 100)
         
-        st.success(f"Teste finalizado com sucesso, {nome_aluno}!")
-        st.balloons()
+        st.success(f"Teste finalizado, {nome_aluno}!")
         
-        col1, col2 = st.columns(2)
-        col1.metric("Nota Final", f"{nota_final} / 10.0")
-        col2.metric("Aproveitamento", f"{porcentagem_final}%")
-        
-        # Geração do PDF Corrigida (sem encode)
-        pdf_bytes = criar_pdf(nome_aluno, acertos, nota_final, porcentagem_final)
+        # AQUI ESTÁ A CORREÇÃO: Converter para bytes antes do download
+        pdf_output = criar_pdf(nome_aluno, acertos, nota_final, porcentagem_final)
         
         st.download_button(
             label="📄 BAIXAR COMPROVANTE (PDF)",
-            data=pdf_bytes,
+            data=bytes(pdf_output),  # FORÇA A CONVERSÃO PARA BYTES
             file_name=f"Resultado_Fisica_{nome_aluno.replace(' ', '_')}.pdf",
             mime="application/pdf"
         )
-        st.info("Clique no botão acima para salvar seu comprovante e enviá-lo ao professor.")
