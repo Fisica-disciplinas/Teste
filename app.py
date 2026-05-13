@@ -6,6 +6,7 @@ import random
 # Configuração da página IFPI
 st.set_page_config(page_title="Teste Diagnóstico - Física IFPI", page_icon="🔬")
 
+# Cabeçalho visual
 st.markdown("""
     <div style='background-color: #2f9e41; color: white; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 25px;'>
         <h1 style='margin:0;'>INSTITUTO FEDERAL DO PIAUÍ</h1>
@@ -13,7 +14,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# Banco de dados original com resoluções
+# Banco de dados com resoluções
 BANCO_QUESTOES = [
     {"q": "1. Velocidade média de crescimento da planta em µm/s?", "o": ["a) 3,06 × 10⁰", "b) 3,06 × 10²", "c) 3,06 × 10⁻²", "d) 3,06 × 10⁶"], "c": "a) 3,06 × 10⁰", "r": "Conversão: 3,7m em 14 dias resulta em ~3,06 µm/s. Ordem de grandeza 10⁰."},
     {"q": "2. Algarismos significativos em 0,0056 g e 1,2300 g/cm³:", "o": ["a) 4 e 5", "b) 2 e 5", "c) 2 e 4", "d) 4 e 4"], "c": "b) 2 e 5", "r": "Zeros à esquerda não contam; zeros à direita em decimais contam."},
@@ -27,65 +28,89 @@ BANCO_QUESTOES = [
     {"q": "10. 483 km em notação científica no S.I. (metros):", "o": ["a) 483 × 10³ m", "b) 4,83 × 10⁵ m", "c) 4,83 × 10⁴ m", "d) 4,83 × 10⁻⁵ m"], "c": "b) 4,83 × 10⁵ m", "r": "483.000 m = 4,83 × 10⁵ m."}
 ]
 
-# Inicializa ordem aleatória apenas uma vez por sessão
-if 'questoes_shuffled' not in st.session_state:
-    shuffled = BANCO_QUESTOES.copy()
-    random.shuffle(shuffled)
-    for q in shuffled:
-        random.shuffle(q['o'])
-    st.session_state.questoes_shuffled = shuffled
+# Inicializa as questões aleatórias na primeira carga
+if 'questoes_random' not in st.session_state:
+    lista_temp = []
+    for item in BANCO_QUESTOES:
+        opcoes = list(item["o"])
+        random.shuffle(opcoes)
+        lista_temp.append({
+            "q": item["q"],
+            "o": opcoes,
+            "c": item["c"],
+            "r": item["r"]
+        })
+    random.shuffle(lista_temp)
+    st.session_state.questoes_random = lista_temp
 
-def criar_pdf_comprovante(nome, nota):
+def criar_pdf_suap(nome, nota):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("helvetica", 'B', 16)
-    pdf.cell(190, 10, txt="INSTITUTO FEDERAL DO PIAUÍ - COMPROVANTE", ln=True, align='C')
+    pdf.set_text_color(47, 158, 65)
+    pdf.cell(190, 10, txt="IFPI - COMPROVANTE DE ATIVIDADE", ln=True, align='C')
     pdf.ln(10)
-    pdf.set_font("helvetica", size=12)
-    pdf.cell(190, 10, txt=f"Estudante: {nome}", ln=True)
-    pdf.cell(190, 10, txt=f"Nota Final: {nota} / 10.0", ln=True)
-    pdf.cell(190, 10, txt=f"Data: {datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=True)
+    pdf.set_font("helvetica", '', 12)
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(190, 8, txt=f"Estudante: {nome}", ln=True)
+    pdf.cell(190, 8, txt=f"Disciplina: Introdução às Ciências da Natureza", ln=True)
+    pdf.cell(190, 8, txt=f"Data/Hora: {datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=True)
+    pdf.ln(10)
+    pdf.set_font("helvetica", 'B', 16)
+    pdf.cell(190, 15, txt=f"NOTA FINAL: {nota} / 10.0", ln=True, align='C', fill=False)
     return pdf.output()
 
-def criar_pdf_feedback(nome, respostas_usuario):
+def criar_pdf_feedback(nome, nota, respostas_aluno):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("helvetica", 'B', 14)
-    pdf.cell(190, 10, txt=f"Feedback de Estudo: {nome}", ln=True, align='C')
-    pdf.ln(5)
+    pdf.cell(190, 10, txt=f"Gabarito Comentado: {nome}", ln=True, align='C')
+    pdf.ln(10)
     
-    for i, q in enumerate(st.session_state.questoes_shuffled):
-        pdf.set_font("helvetica", 'B', 10)
-        pdf.multi_cell(0, 7, txt=f"Questão {i+1}: {q['q']}")
-        resp = respostas_usuario[i]
-        cor status = "CORRETO" if resp == q['c'] else "INCORRETO"
+    for i, q in enumerate(st.session_state.questoes_random):
+        resp = respostas_aluno[i]
+        status = "CORRETO" if resp == q['c'] else "INCORRETO"
         
+        pdf.set_font("helvetica", 'B', 10)
+        pdf.multi_cell(0, 6, txt=f"Questão {i+1}: {q['q']}")
         pdf.set_font("helvetica", '', 10)
-        pdf.cell(0, 7, txt=f"Sua resposta: {resp} ({status})", ln=True)
-        pdf.cell(0, 7, txt=f"Resposta correta: {q['c']}", ln=True)
+        pdf.cell(0, 6, txt=f"Sua resposta: {resp} ({status})", ln=True)
+        pdf.cell(0, 6, txt=f"Gabarito: {q['c']}", ln=True)
         pdf.set_font("helvetica", 'I', 9)
-        pdf.multi_cell(0, 7, txt=f"Resolução: {q['r']}")
-        pdf.ln(5)
+        pdf.set_text_color(100, 100, 100)
+        pdf.multi_cell(0, 6, txt=f"Resolução: {q['r']}")
+        pdf.set_text_color(0, 0, 0)
+        pdf.ln(4)
     return pdf.output()
 
-with st.form("quiz"):
-    nome = st.text_input("Nome Completo (Conforme SUAP):")
+# Formulário
+with st.form("teste"):
+    nome_suap = st.text_input("Nome Completo (para o SUAP):")
     respostas = []
-    for item in st.session_state.questoes_shuffled:
+    for item in st.session_state.questoes_random:
         respostas.append(st.radio(item["q"], item["o"], index=None))
     
-    if st.form_submit_button("FINALIZAR"):
-        if not nome or None in respostas:
-            st.error("Preencha tudo!")
-        else:
-            acertos = sum(1 for i, r in enumerate(respostas) if r == st.session_state.questoes_shuffled[i]["c"])
-            nota = float(acertos)
-            st.success(f"Concluído! Nota: {nota}")
+    enviar = st.form_submit_button("FINALIZAR TESTE")
+
+if enviar:
+    if not nome_suap or None in respostas:
+        st.warning("⚠️ Preencha seu nome e todas as questões.")
+    else:
+        acertos = sum(1 for i, r in enumerate(respostas) if r == st.session_state.questoes_random[i]["c"])
+        nota_val = float(acertos)
+        
+        st.success(f"Teste concluído! Sua nota foi {nota_val}")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            pdf_s = criar_pdf_suap(nome_suap, nota_val)
+            st.download_button("📄 COMPROVANTE (Enviar ao Professor)", 
+                             data=bytes(pdf_s), 
+                             file_name=f"SUAP_{nome_suap.replace(' ','_')}.pdf")
             
-            # Botão 1: Comprovante para o Professor
-            pdf_comp = criar_pdf_comprovante(nome, nota)
-            st.download_button("📄 BAIXAR COMPROVANTE (Enviar ao Prof)", data=bytes(pdf_comp), file_name=f"SUAP_{nome}.pdf")
-            
-            # Botão 2: Feedback para o Aluno
-            pdf_feed = criar_pdf_feedback(nome, respostas)
-            st.download_button("📘 BAIXAR GABARITO COMENTADO (Para Estudo)", data=bytes(pdf_feed), file_name=f"Feedback_{nome}.pdf")
+        with col2:
+            pdf_f = criar_pdf_feedback(nome_suap, nota_val, respostas)
+            st.download_button("📘 GABARITO (Estudo Pessoal)", 
+                             data=bytes(pdf_f), 
+                             file_name=f"Feedback_{nome_suap.replace(' ','_')}.pdf")
